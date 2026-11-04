@@ -1,0 +1,79 @@
+name: Publish Vidy plugin release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Plugin version (four-part Jellyfin version, e.g. 0.1.0.0)
+        required: true
+        default: "0.1.0.0"
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Determine version
+        id: version
+        shell: bash
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Version must have four numeric components, got: $VERSION" >&2
+            exit 1
+          fi
+          echo "value=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Build plugin and repository manifest
+        env:
+          PLUGIN_VERSION: ${{ steps.version.outputs.value }}
+          SOURCE_URL: https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.tag }}/vidy_${{ steps.version.outputs.value }}.zip
+        run: bash scripts/package.sh
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: Vidy ${{ steps.version.outputs.value }}
+          generate_release_notes: true
+          files: |
+            dist/vidy_${{ steps.version.outputs.value }}.zip
+            dist/vidy_${{ steps.version.outputs.value }}.zip.md
+
+      - name: Publish manifest to default branch
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        shell: bash
+        run: |
+          git fetch origin "$DEFAULT_BRANCH"
+          git worktree add /tmp/vidy-manifest "origin/$DEFAULT_BRANCH"
+          cp dist/manifest.json /tmp/vidy-manifest/manifest.json
+          cd /tmp/vidy-manifest
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add manifest.json
+          if git diff --cached --quiet; then
+            echo "Manifest is already current."
+          else
+            git commit -m "Publish Vidy ${{ steps.version.outputs.value }} repository manifest"
+            git push origin "HEAD:$DEFAULT_BRANCH"
+          fi
