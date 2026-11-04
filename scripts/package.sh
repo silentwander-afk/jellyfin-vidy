@@ -2,10 +2,15 @@
 # Builds the plugin and produces dist/vidy_<version>.zip (+ md5 and a repository manifest.json).
 set -euo pipefail
 
-VERSION="0.1.0.0"
-TARGET_ABI="12.4.0.0"
+VERSION="${PLUGIN_VERSION:-0.1.0.0}"
+TARGET_ABI="${TARGET_ABI:-12.4.0.0}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
+
+if [[ ! "$VERSION" =~ ^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$ ]]; then
+  echo "PLUGIN_VERSION must have four numeric components (for example 0.1.0.0)." >&2
+  exit 1
+fi
 
 rm -rf out dist
 dotnet publish src/Jellyfin.Plugin.Vidy -c Release -o out
@@ -35,7 +40,7 @@ echo "$MD5  vidy_${VERSION}.zip" > "dist/vidy_${VERSION}.zip.md5"
 
 # Repository manifest. sourceUrl must point at wherever you host the ZIP (for example a GitHub Release asset).
 # Until you do, the manifest is NOT usable for installation from Jellyfin's plugin catalogue.
-SOURCE_URL="${SOURCE_URL:-REPLACE_WITH_PUBLIC_URL_OF_THE_ZIP}"
+SOURCE_URL="${SOURCE_URL:-https://github.com/silentwander-afk/jellyfin-vidy/releases/download/v${VERSION}/vidy_${VERSION}.zip}"
 cat > dist/manifest.json <<EOF
 [
   {
