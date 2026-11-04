@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "guid": "b7c2a4e1-5d3f-4a68-9c1e-2f8d6a0b3e47",
+    "name": "Vidy",
+    "description": "Search TMDB from Jellyfin and watch movies and TV through the Vidy embed player.",
+    "overview": "TMDB search, Vidy playback, per-user progress and Continue Watching for Jellyfin Web.",
+    "owner": "vidy-plugin",
+    "category": "General",
+    "versions": [
+      {
+        "version": "0.1.2.0",
+        "changelog": "Initial release.",
+        "targetAbi": "12.4.0.0",
+        "sourceUrl": "https://github.com/silentwander-afk/jellyfin-vidy/releases/download/v0.1.2.0/vidy_0.1.2.0.zip",
+        "checksum": "627917143e076db3fab04ccffe96cda2",
+        "timestamp": "2026-11-04T22:04:00Z"
+      }
+    ]
+  }
+]
