@@ -1,0 +1,35 @@
+name: Build and test Vidy plugin
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Run unit tests
+        run: dotnet test tests/Jellyfin.Plugin.Vidy.Tests -c Release --logger "trx;LogFileName=test-results.trx" --results-directory test-results
+
+      - name: Build plugin package
+        run: bash scripts/package.sh
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results/*.trx
+
+      - name: Upload plugin package
+        uses: actions/upload-artifact@v4
+        with:
+          name: vidy-plugin
+          path: dist/*

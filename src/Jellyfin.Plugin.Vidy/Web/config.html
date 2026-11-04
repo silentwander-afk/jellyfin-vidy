@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Vidy</title>
+</head>
+<body>
+<div id="VidyConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
+    <div data-role="content">
+        <div class="content-primary">
+            <form id="VidyConfigForm">
+                <div class="verticalSection">
+                    <h2 class="sectionTitle">Vidy</h2>
+                    <p>Search TMDB from Jellyfin and play titles through the Vidy embed player. TMDB data is provided by <a is="emby-linkbutton" class="button-link" href="https://www.themoviedb.org/" target="_blank" rel="noopener">The Movie Database</a>; this product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+                    <div id="vidyError" style="display:none;color:#e53935;margin-bottom:1em;"></div>
+                </div>
+
+                <fieldset class="verticalSection verticalSection-extrabottompadding">
+                    <legend><h3>TMDB API</h3></legend>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" data-key="TmdbEnabled" /><span>Enable TMDB integration</span></label>
+                    </div>
+                    <div class="inputContainer">
+                        <input is="emby-input" type="password" autocomplete="off" data-key="TmdbApiKey" label="TMDB API key or read access token" />
+                        <div class="fieldDescription">Create a free key at themoviedb.org → Settings → API. Either the v3 API key or the v4 "API Read Access Token" works. The key stays on the server and is never sent to browsers.</div>
+                    </div>
+                    <button is="emby-button" type="button" id="vidyTest" class="raised"><span>Save and test connection</span></button>
+                    <span id="vidyTestResult" style="margin-left:1em;"></span>
+                </fieldset>
+
+                <fieldset class="verticalSection verticalSection-extrabottompadding">
+                    <legend><h3>Search</h3></legend>
+                    <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" data-key="EnableMovieSearch" /><span>Search movies</span></label></div>
+                    <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" data-key="EnableTvSearch" /><span>Search TV shows</span></label></div>
+                    <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" data-key="IncludeAdult" /><span>Include adult titles</span></label></div>
+                    <div class="inputContainer"><input is="emby-input" type="number" min="1" max="50" step="1" data-key="SearchResultLimit" label="Search result limit (1-50)" /></div>
+                    <div class="inputContainer"><input is="emby-input" type="text" pattern="[a-z]{2}(-[A-Z]{2})?" data-key="SearchLanguage" label="Search language (for example en-US)" /></div>
+                    <div class="inputContainer"><input is="emby-input" type="text" pattern="[a-z]{2}(-[A-Z]{2})?" data-key="MetadataLanguage" label="Preferred metadata language (for example en-US)" /></div>
+                    <div class="inputContainer"><input is="emby-input" type="number" min="2" max="60" step="1" data-key="SearchTimeoutSeconds" label="TMDB request timeout (seconds, 2-60)" /></div>
+                </fieldset>
+
+                <fieldset class="verticalSection verticalSection-extrabottompadding">
+                    <legend><h3>Playback</h3></legend>
+                    <div class="inputContainer"><input is="emby-input" type="text" pattern="#?[0-9A-Fa-f]{6}" data-key="AccentColor" label="Player accent color (6-digit hex, for example DC2626)" /></div>
+                    <div class="selectContainer">
+                        <select is="emby-select" data-key="AspectRatio" label="Player aspect ratio">
+                            <option value="16:9">16:9</option>
+                            <option value="4:3">4:3</option>
+                            <option value="21:9">21:9</option>
+                        </select>
+                    </div>
+                    <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" data-key="Autoplay" /><span>Autoplay (browsers only allow this after you have clicked on the page)</span></label></div>
+                    <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" data-key="ResumePlayback" /><span>Resume from the saved position</span></label></div>
+                    <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" data-key="AutoNextEpisode" /><span>Automatically play the next episode</span></label></div>
+                    <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" data-key="NextEpisodeCountdown" /><span>Show a countdown before the next episode</span></label></div>
+                    <div class="inputContainer"><input is="emby-input" type="number" min="1" max="60" step="1" data-key="CountdownSeconds" label="Countdown length (seconds, 1-60)" /></div>
+                    <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" data-key="AllowManualNext" /><span>Show "Next episode" / "Play now" buttons</span></label></div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" data-key="EpisodeSelector" /><span>Enable Vidy's in-player episode selector</span></label>
+                        <div class="fieldDescription checkboxFieldDescription">Vidy does not report which episode you picked inside its player, so progress is saved against the episode that was opened from Jellyfin. Leave off for exact tracking.</div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="verticalSection verticalSection-extrabottompadding">
+                    <legend><h3>History</h3></legend>
+                    <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" data-key="TrackingEnabled" /><span>Enable playback tracking</span></label></div>
+                    <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" data-key="AutoMarkWatched" /><span>Automatically mark completed titles as watched</span></label></div>
+                    <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" data-key="ContinueWatchingEnabled" /><span>Show Continue Watching on the home screen</span></label></div>
+                    <div class="inputContainer"><input is="emby-input" type="number" min="50" max="100" step="1" data-key="CompletionThreshold" label="Completion threshold (% played, 50-100)" /></div>
+                    <div class="inputContainer"><input is="emby-input" type="number" min="5" max="120" step="1" data-key="ProgressSyncSeconds" label="Progress sync interval (seconds, 5-120)" /></div>
+                    <button is="emby-button" type="button" id="vidyClearHistory" class="raised button-warn"><span>Clear playback history for ALL users</span></button>
+                </fieldset>
+
+                <fieldset class="verticalSection verticalSection-extrabottompadding">
+                    <legend><h3>Cache</h3></legend>
+                    <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" data-key="CacheEnabled" /><span>Cache TMDB responses</span></label></div>
+                    <div class="inputContainer"><input is="emby-input" type="number" min="1" max="10080" step="1" data-key="CacheMinutes" label="Cache duration (minutes, 1-10080)" /></div>
+                    <div class="inputContainer"><input is="emby-input" type="number" min="10" max="5000" step="1" data-key="MaxCachedEntries" label="Maximum cached entries (10-5000)" /></div>
+                    <button is="emby-button" type="button" id="vidyClearCache" class="raised"><span>Clear cache now</span></button>
+                    <span id="vidyCacheResult" style="margin-left:1em;"></span>
+                </fieldset>
+
+                <fieldset class="verticalSection verticalSection-extrabottompadding">
+                    <legend><h3>Web client</h3></legend>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" data-key="InjectClientScript" /><span>Add the Vidy script to Jellyfin Web on server start</span></label>
+                        <div class="fieldDescription checkboxFieldDescription">Needed for search, details and playback inside Jellyfin Web. If the web folder is read-only, see the README for another way to load /Vidy/Client/vidy.js. Takes effect after a server restart.</div>
+                    </div>
+                </fieldset>
+
+                <div>
+                    <button is="emby-button" type="submit" class="raised button-submit block"><span>Save</span></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        (function () {
+            var pluginId = 'b7c2a4e1-5d3f-4a68-9c1e-2f8d6a0b3e47';
+            var page = document.querySelector('#VidyConfigPage');
+
+            function fields() { return page.querySelectorAll('[data-key]'); }
+
+            function showError(msg) {
+                var box = page.querySelector('#vidyError');
+                box.textContent = msg || '';
+                box.style.display = msg ? 'block' : 'none';
+            }
+
+            function load() {
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                    fields().forEach(function (f) {
+                        var v = config[f.getAttribute('data-key')];
+                        if (f.type === 'checkbox') { f.checked = !!v; } else if (v !== undefined && v !== null) { f.value = v; }
+                    });
+                    Dashboard.hideLoadingMsg();
+                });
+            }
+
+            function collect(config) {
+                var bad = null;
+                fields().forEach(function (f) {
+                    var key = f.getAttribute('data-key');
+                    if (f.type === 'checkbox') { config[key] = f.checked; return; }
+                    if (f.type === 'number') {
+                        var n = parseInt(f.value, 10);
+                        var min = parseInt(f.min, 10), max = parseInt(f.max, 10);
+                        if (isNaN(n) || n < min || n > max) { bad = bad || (f.getAttribute('label') + ' must be a number from ' + min + ' to ' + max + '.'); }
+                        config[key] = n;
+                        return;
+                    }
+                    var val = (f.value || '').trim();
+                    if (key === 'AccentColor') {
+                        val = val.replace(/^#/, '');
+                        if (!/^[0-9A-Fa-f]{6}$/.test(val)) { bad = bad || 'The accent color must be 6 hex digits, for example DC2626.'; }
+                    }
+                    if ((key === 'SearchLanguage' || key === 'MetadataLanguage') && !/^[a-z]{2}(-[A-Z]{2})?$/.test(val)) {
+                        bad = bad || 'Languages look like en or en-US.';
+                    }
+                    config[key] = val;
+                });
+                return bad;
+            }
+
+            function save(done) {
+                showError('');
+                return ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                    var problem = collect(config);
+                    if (problem) { showError(problem); return false; }
+                    return ApiClient.updatePluginConfiguration(pluginId, config).then(function (result) {
+                        Dashboard.processPluginConfigurationUpdateResult(result);
+                        return true;
+                    });
+                });
+            }
+
+            function admin(method, path) {
+                return ApiClient.ajax({ type: method, url: ApiClient.getUrl(path), dataType: 'json' });
+            }
+
+            page.addEventListener('pageshow', load);
+
+            page.querySelector('#VidyConfigForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                Dashboard.showLoadingMsg();
+                save().then(function () { Dashboard.hideLoadingMsg(); }, function () { Dashboard.hideLoadingMsg(); showError('Saving failed. Check the Jellyfin log.'); });
+                return false;
+            });
+
+            page.querySelector('#vidyTest').addEventListener('click', function () {
+                var out = page.querySelector('#vidyTestResult');
+                out.style.color = ''; out.textContent = 'Testing…';
+                save().then(function (ok) {
+                    if (!ok) { out.textContent = ''; return; }
+                    return admin('POST', 'Vidy/Admin/TestTmdb').then(function (r) {
+                        out.style.color = r.ok ? '#43a047' : '#e53935';
+                        out.textContent = r.message;
+                    });
+                }).catch(function () { out.style.color = '#e53935'; out.textContent = 'The test request failed. Is the server reachable?'; });
+            });
+
+            page.querySelector('#vidyClearCache').addEventListener('click', function () {
+                var out = page.querySelector('#vidyCacheResult');
+                admin('POST', 'Vidy/Admin/ClearCache').then(function (r) { out.textContent = 'Cleared ' + r.cleared + ' cached entries.'; })
+                    .catch(function () { out.textContent = 'Could not clear the cache.'; });
+            });
+
+            page.querySelector('#vidyClearHistory').addEventListener('click', function () {
+                if (!window.confirm('This permanently deletes the Vidy playback history, resume positions and watched marks of EVERY user. Continue?')) { return; }
+                admin('DELETE', 'Vidy/Admin/History').then(function (r) { Dashboard.alert('Deleted history files: ' + r.files); })
+                    .catch(function () { Dashboard.alert('Could not clear history. Check the Jellyfin log.'); });
+            });
+        })();
+    </script>
+</div>
+</body>
+</html>

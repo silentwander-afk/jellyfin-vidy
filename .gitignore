@@ -1,0 +1,7 @@
+bin/
+obj/
+out/
+dist/
+test-results/
+*.user
+.vs/
